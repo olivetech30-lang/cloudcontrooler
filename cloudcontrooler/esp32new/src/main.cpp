@@ -6,11 +6,11 @@
 
 // ---------- User configuration ----------
 
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID     = "FFC-BYOD";
+const char* WIFI_PASSWORD = "6214";
 
 // Vercel backend domain (NO https://, NO path)
-const char* BACKEND_HOST = "YOUR-BACKEND-DOMAIN.vercel.app";
+const char* BACKEND_HOST = "cloudcontrooler.vercel.app";
 const char* DELAY_PATH   = "/api/delay";
 
 #define LED_PIN     48
@@ -125,4 +125,5 @@ void loop() {
     lastToggleTime = now;
     setLedState(!ledOn);
   }
+
 }
