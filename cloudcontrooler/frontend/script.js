@@ -5,7 +5,7 @@ const MAX_DELAY = 2000;
 const BUTTON_STEP = 50;
 
 // Backend API base URL
-const BACKEND_URL = "https://<YOUR_BACKEND_DOMAIN>"; // e.g. https://flash-backend-yourname.vercel.app
+const BACKEND_URL = "https://<cloudcontrooler.vercel.app/>"; // e.g. https://flash-backend-yourname.vercel.app
 const DELAY_API_URL = `${BACKEND_URL}/api/delay`;
 
 let currentDelay = 700;
@@ -103,4 +103,5 @@ window.addEventListener("load", () => {
   setStatus(false);
   fetchCurrentDelay();
   startPolling();
+
 });
