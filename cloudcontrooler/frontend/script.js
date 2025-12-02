@@ -1,15 +1,12 @@
-// frontend/script.js
+const MIN_DELAY = 1;      // 1 second
+const MAX_DELAY = 20;     // 20 seconds
+const BUTTON_STEP = 1;    // 1 second step
 
-const MIN_DELAY = 50;
-const MAX_DELAY = 2000;
-const BUTTON_STEP = 50;
-
-// Backend API base URL
-const BACKEND_URL = "https://cloudcontrooler-backend.vercel.app"; // e.g. https://flash-backend-yourname.vercel.app
+const BACKEND_URL = "https://cloudcontrooler-backend.vercel.app";
 const DELAY_API_URL = `${BACKEND_URL}/api/delay`;
 
-let currentDelay = 700;
-let pollingTimer = null;
+let currentDelay = 2;     // 2 seconds default
+let pollTimer = null;
 
 const delayValueEl = document.getElementById("delayValue");
 const delaySliderEl = document.getElementById("delaySlider");
@@ -33,10 +30,10 @@ function setStatus(online) {
   }
 }
 
-function updateUI(delay) {
-  delayValueEl.textContent = delay;
-  if (parseInt(delaySliderEl.value, 10) !== delay) {
-    delaySliderEl.value = delay;
+function updateUI(delaySec) {
+  delayValueEl.textContent = delaySec; // show seconds
+  if (parseInt(delaySliderEl.value, 10) !== delaySec) {
+    delaySliderEl.value = delaySec;
   }
 }
 
@@ -51,13 +48,13 @@ async function fetchCurrentDelay() {
       setStatus(true);
     }
   } catch (err) {
-    console.error("Failed to fetch delay:", err);
+    console.error("[frontend] fetchCurrentDelay error:", err);
     setStatus(false);
   }
 }
 
-async function sendDelay(delay) {
-  const clamped = clampDelay(delay);
+async function sendDelay(newDelaySec) {
+  const clamped = clampDelay(newDelaySec);
   currentDelay = clamped;
   updateUI(clamped);
 
@@ -65,7 +62,7 @@ async function sendDelay(delay) {
     const res = await fetch(DELAY_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ delay: clamped }),
+      body: JSON.stringify({ delay: clamped }),  // seconds
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
@@ -75,35 +72,40 @@ async function sendDelay(delay) {
     }
     setStatus(true);
   } catch (err) {
-    console.error("Failed to send delay:", err);
+    console.error("[frontend] sendDelay error:", err);
     setStatus(false);
   }
 }
 
-// UI events
+// – button: decrease delay (faster blink)
 btnMinusEl.addEventListener("click", () => {
   sendDelay(currentDelay - BUTTON_STEP);
 });
 
+// + button: increase delay (slower blink)
 btnPlusEl.addEventListener("click", () => {
   sendDelay(currentDelay + BUTTON_STEP);
 });
 
+// Slider: set exact delay (seconds)
 delaySliderEl.addEventListener("input", (e) => {
   sendDelay(parseInt(e.target.value, 10));
 });
 
-// Poll backend periodically to reflect changes from other users
 function startPolling() {
-  if (pollingTimer) clearInterval(pollingTimer);
-  pollingTimer = setInterval(fetchCurrentDelay, 1000); // every 1s
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(fetchCurrentDelay, 1000); // every 1 s
 }
 
 window.addEventListener("load", () => {
+  delaySliderEl.min = MIN_DELAY;
+  delaySliderEl.max = MAX_DELAY;
+  delaySliderEl.step = 1;
+  delaySliderEl.value = currentDelay;
+
+  updateUI(currentDelay);
   setStatus(false);
+
   fetchCurrentDelay();
   startPolling();
-
 });
-
-
