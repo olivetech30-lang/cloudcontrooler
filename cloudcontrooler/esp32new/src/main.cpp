@@ -6,8 +6,8 @@
 
 // ---------- User configuration ----------
 
-const char* WIFI_SSID     = "FFC-BYOD";
-const char* WIFI_PASSWORD = "6214";
+const char* WIFI_SSID     = "Oh u don't have internet poor u";
+const char* WIFI_PASSWORD = "bbvc1725";
 
 // Vercel backend domain (NO https://, NO path)
 const char* BACKEND_HOST = "cloudcontrooler-backend.vercel.app";
@@ -127,4 +127,5 @@ void loop() {
   }
 
 }
+
 
