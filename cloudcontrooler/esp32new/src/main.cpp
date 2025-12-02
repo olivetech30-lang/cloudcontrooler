@@ -1,13 +1,13 @@
+#include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
-
 // ---------- User configuration ----------
 
-const char* WIFI_SSID     = "Oh u don't have internet poor u";
-const char* WIFI_PASSWORD = "bbvc1725";
+const char* WIFI_SSID     = "Oh u don't have inetrnet poor u";
+const char* WIFI_PASSWORD = "bbcv1725";
 
 // Vercel backend domain (NO https://, NO path)
 const char* BACKEND_HOST = "cloudcontrooler-backend.vercel.app";
@@ -125,7 +125,4 @@ void loop() {
     lastToggleTime = now;
     setLedState(!ledOn);
   }
-
 }
-
-
