@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/delay.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/api/delay", "dest": "api/delay.py" }
+  ]
+}
