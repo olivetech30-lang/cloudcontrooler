@@ -5,7 +5,7 @@ const MAX_DELAY = 20000;
 const BUTTON_STEP = 50;
 
 // Your deployed backend URL (change if needed)
-const BACKEND_URL = "https://cloudcontrooler-backend.vercel.app";
+const BACKEND_URL = "https://cloudcontrollerbackend.vercel.app";
 const DELAY_API_URL = `${BACKEND_URL}/api/delay`;
 
 // ---------- State ----------
@@ -126,4 +126,5 @@ window.addEventListener("load", () => {
   // Get initial value from backend and start polling
   fetchCurrentDelay();
   startPolling();
+
 });
