@@ -20,7 +20,7 @@
         <div class="label">Current delay</div>
         <div class="value">
           <span id="delayValue">--</span>
-          <span class="unit">s</span>
+          <span class="unit">s</span> <!-- seconds -->
         </div>
       </section>
 
@@ -31,14 +31,14 @@
           <input
             id="delaySlider"
             type="range"
-            min="5000"
-            max="20000"
-            step="10"
-            value="7000"
+            min="5"
+            max="20"
+            step="1"
+            value="7"
           />
           <div class="slider-labels">
-            <span>Faster (5000s)</span>
-            <span>Slower (20000s)</span>
+            <span>Faster (5s)</span>
+            <span>Slower (20s)</span>
           </div>
         </div>
 
@@ -48,7 +48,7 @@
       <section class="hint">
         <p>
           Use <strong>−</strong> to blink faster, <strong>+</strong> to blink slower,
-          or drag the slider to set an exact delay (5000–20000 s).
+          or drag the slider to set an exact delay (5–20&nbsp;s).
         </p>
         <p>
           This page talks to a cloud API; the ESP32 polls the same API via HTTPS.
