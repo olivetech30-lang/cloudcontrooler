@@ -1,63 +1,112 @@
+const MIN_DELAY_MS = 100;
+const MAX_DELAY_MS = 2000;
+const BUTTON_STEP_MS = 100;
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Cloud Flash Controller</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="app">
-    <header>
-      <h1>Cloud Flash Controller</h1>
-      <div id="connectionStatus" class="status status-disconnected">
-        Checking...
-      </div>
-    </header>
+const BACKEND_URL = "https://cloudcontrollerbackend.vercel.app";
+const DELAY_API_URL = `${BACKEND_URL}/api/delay`;
 
-    <main>
-      <section class="display">
-        <div class="label">Current delay</div>
-        <div class="value">
-          <span id="delayValue">--</span>
-          <span class="unit">ms</span>
-        </div>
-      </section>
+let currentDelayMs = 700;
+let pollTimer = null;
 
-      <section class="controls">
-        <button id="btnMinus" class="btn">−</button>
+const delayValueEl = document.getElementById("delayValue");
+const delaySliderEl = document.getElementById("delaySlider");
+const btnMinusEl = document.getElementById("btnMinus");
+const btnPlusEl = document.getElementById("btnPlus");
+const connectionStatusEl = document.getElementById("connectionStatus");
 
-        <div class="slider-wrapper">
-          <input
-            id="delaySlider"
-            type="range"
-            min="100"
-            max="2000"
-            step="100"
-            value="700"
-          />
-          <div class="slider-labels">
-            <span>Faster (100&nbsp;ms)</span>
-            <span>Slower (2000&nbsp;ms)</span>
-          </div>
-        </div>
+function clampDelayMs(v) {
+  return Math.min(MAX_DELAY_MS, Math.max(MIN_DELAY_MS, v));
+}
 
-        <button id="btnPlus" class="btn">+</button>
-      </section>
+function setStatus(online) {
+  if (online) {
+    connectionStatusEl.textContent = "Online";
+    connectionStatusEl.classList.remove("status-disconnected");
+    connectionStatusEl.classList.add("status-connected");
+  } else {
+    connectionStatusEl.textContent = "Offline";
+    connectionStatusEl.classList.remove("status-connected");
+    connectionStatusEl.classList.add("status-disconnected");
+  }
+}
 
-      <section class="hint">
-        <p>
-          Use <strong>−</strong> to blink faster, <strong>+</strong> to blink slower,
-          or drag the slider to set an exact delay (100–2000&nbsp;ms).
-        </p>
-        <p>
-          This page talks to a cloud API; the ESP32 polls the same API via HTTPS.
-        </p>
-      </section>
-    </main>
-  </div>
+function updateUI(delayMs) {
+  delayValueEl.textContent = delayMs;
+  if (parseInt(delaySliderEl.value, 10) !== delayMs) {
+    delaySliderEl.value = delayMs;
+  }
+}
 
-  <script src="script.js"></script>
-</body>
-</html>
+async function fetchCurrentDelay() {
+  try {
+    const res = await fetch(DELAY_API_URL);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (typeof data.delay === "number") {
+      currentDelayMs = clampDelayMs(data.delay);
+      updateUI(currentDelayMs);
+      setStatus(true);
+    }
+  } catch (err) {
+    console.error("[frontend] fetchCurrentDelay error:", err);
+    setStatus(false);
+  }
+}
+
+async function sendDelayMs(newDelayMs) {
+  const clampedMs = clampDelayMs(newDelayMs);
+  currentDelayMs = clampedMs;
+  updateUI(clampedMs);
+
+  try {
+    const res = await fetch(DELAY_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ delay: clampedMs })
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (typeof data.delay === "number") {
+      currentDelayMs = clampDelayMs(data.delay);
+      updateUI(currentDelayMs);
+    }
+    setStatus(true);
+  } catch (err) {
+    console.error("[frontend] sendDelayMs error:", err);
+    setStatus(false);
+  }
+}
+
+// – button: decrease delay → faster blink
+btnMinusEl.addEventListener("click", () => {
+  sendDelayMs(currentDelayMs - BUTTON_STEP_MS);
+});
+
+// + button: increase delay → slower blink
+btnPlusEl.addEventListener("click", () => {
+  sendDelayMs(currentDelayMs + BUTTON_STEP_MS);
+});
+
+// Slider: exact delay
+delaySliderEl.addEventListener("input", (e) => {
+  const valueMs = parseInt(e.target.value, 10);
+  sendDelayMs(valueMs);
+});
+
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(fetchCurrentDelay, 2000);
+}
+
+window.addEventListener("load", () => {
+  delaySliderEl.min = MIN_DELAY_MS;
+  delaySliderEl.max = MAX_DELAY_MS;
+  delaySliderEl.step = BUTTON_STEP_MS;
+  delaySliderEl.value = currentDelayMs;
+
+  updateUI(currentDelayMs);
+  setStatus(false);
+
+  fetchCurrentDelay();
+  startPolling();
+});
