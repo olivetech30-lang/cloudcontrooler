@@ -7,44 +7,39 @@
 
 // ---------- User configuration ----------
 
-// Use your hotspot or home WiFi (2.4 GHz WPA/WPA2)
 const char* WIFI_SSID     = "ESPTEST";
 const char* WIFI_PASSWORD = "12345678";
 
-// Backend domain (NO https://, NO path)
-const char* BACKEND_HOST  = "cloudcontrooler-backend.vercel.app";
+const char* BACKEND_HOST  = "cloudcontrollerbackend.vercel.app";
 const char* DELAY_PATH    = "/api/delay";
 
-// Built-in NeoPixel on ESP32-S3
 #define LED_PIN     48
 #define NUM_PIXELS  1
+#define LED_ON_R    0
+#define LED_ON_G    0
+#define LED_ON_B    255
 
-// Blink color
-#define LED_ON_R  0
-#define LED_ON_G  0
-#define LED_ON_B  255
+// Delay range in MILLISECONDS from frontend
+const int MIN_DELAY_MS = 100;    // 0.1 s → very fast
+const int MAX_DELAY_MS = 2000;   // 2.0 s → slow
 
-// Delay range from frontend
-const int MIN_DELAY = 5000;
-const int MAX_DELAY = 20000;
-
-// How often to poll the backend
-const unsigned long POLL_INTERVAL_MS = 500;
+// Poll backend every 1 second
+const unsigned long POLL_INTERVAL_MS = 1000;
 
 Adafruit_NeoPixel pixels(NUM_PIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-// Current blink delay in ms (larger → slower; smaller → faster).
-int blinkDelay = 7000;
+// current delay in ms
+int blinkDelayMs = 700;          // default 0.7 s
 
 unsigned long lastToggleTime = 0;
 bool ledOn = false;
 unsigned long lastPollTime = 0;
 
-// ---------- Helpers ----------
+// ---- helpers ----
 
-int clampDelay(int value) {
-  if (value < MIN_DELAY) return MIN_DELAY;
-  if (value > MAX_DELAY) return MAX_DELAY;
+int clampDelayMs(int value) {
+  if (value < MIN_DELAY_MS) return MIN_DELAY_MS;
+  if (value > MAX_DELAY_MS) return MAX_DELAY_MS;
   return value;
 }
 
@@ -55,36 +50,29 @@ void showColor(uint8_t r, uint8_t g, uint8_t b) {
 
 void setLedState(bool on) {
   ledOn = on;
-  if (on) {
-    showColor(LED_ON_R, LED_ON_G, LED_ON_B);   // blue
-  } else {
-    showColor(0, 0, 0);                        // off
-  }
+  if (on) showColor(LED_ON_R, LED_ON_G, LED_ON_B);
+  else    showColor(0, 0, 0);
 }
 
-// ---------- WiFi ----------
+// ---- WiFi ----
 
 void connectToWiFi() {
   Serial.printf("Connecting to WiFi: %s\n", WIFI_SSID);
-
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  // Red while connecting
-  showColor(255, 0, 0);
+  showColor(255, 0, 0);  // red while connecting
 
   uint8_t attempt = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
     attempt++;
-    if (attempt >= 60) {  // ~30 s timeout
+    if (attempt >= 60) {
       Serial.println("\n[WiFi] Failed to connect, restarting...");
       for (int i = 0; i < 3; i++) {
-        showColor(255, 0, 0);
-        delay(150);
-        showColor(0, 0, 0);
-        delay(150);
+        showColor(255, 0, 0); delay(150);
+        showColor(0, 0, 0);   delay(150);
       }
       ESP.restart();
     }
@@ -96,23 +84,20 @@ void connectToWiFi() {
 
   // Green twice on success
   for (int i = 0; i < 2; i++) {
-    showColor(0, 255, 0);
-    delay(200);
-    showColor(0, 0, 0);
-    delay(200);
+    showColor(0, 255, 0); delay(200);
+    showColor(0, 0, 0);   delay(200);
   }
 
-  // Start blinking with LED off
   setLedState(false);
 }
 
-// ---------- Backend polling ----------
+// ---- backend polling ----
 
 void fetchDelayFromCloud() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   WiFiClientSecure client;
-  client.setInsecure();    // TLS without certificate check
+  client.setInsecure();
 
   HTTPClient https;
   String url = String("https://") + BACKEND_HOST + DELAY_PATH;
@@ -123,19 +108,17 @@ void fetchDelayFromCloud() {
   }
 
   int httpCode = https.GET();
-
   if (httpCode == 200) {
     String payload = https.getString();
-
     StaticJsonDocument<128> doc;
     DeserializationError err = deserializeJson(doc, payload);
     if (!err && doc.containsKey("delay")) {
-      int newDelay = clampDelay((int)doc["delay"]);
-      if (newDelay != blinkDelay) {
-        blinkDelay = newDelay;
+      int newDelayMs = clampDelayMs((int)doc["delay"]);
+      if (newDelayMs != blinkDelayMs) {
+        blinkDelayMs = newDelayMs;
         Serial.print("[HTTP] New blinkDelay: ");
-        Serial.print(blinkDelay);
-        Serial.println(" s");
+        Serial.print(blinkDelayMs);
+        Serial.println(" ms");
       }
     }
   } else {
@@ -146,12 +129,12 @@ void fetchDelayFromCloud() {
   https.end();
 }
 
-// ---------- Arduino setup & loop ----------
+// ---- Arduino setup & loop ----
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.println("\n=== ESP32-S3 Cloud Flash Controller ===");
+  Serial.println("\n=== ESP32-S3 Cloud Flash Controller (ms) ===");
 
   pixels.begin();
   pixels.clear();
@@ -168,14 +151,14 @@ void loop() {
 
   unsigned long now = millis();
 
-  // Poll backend every POLL_INTERVAL_MS
+  // poll backend
   if (now - lastPollTime >= POLL_INTERVAL_MS) {
     lastPollTime = now;
     fetchDelayFromCloud();
   }
 
-  // Blink with current delay (bigger value => slower toggle)
-  if (now - lastToggleTime >= (unsigned long)blinkDelay) {
+  // blink with current delay (bigger value => slower toggle)
+  if (now - lastToggleTime >= (unsigned long)blinkDelayMs) {
     lastToggleTime = now;
     setLedState(!ledOn);
   }
