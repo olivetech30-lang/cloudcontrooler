@@ -3,11 +3,11 @@ from http.server import BaseHTTPRequestHandler
 import json
 
 # Delay stored in SECONDS, must be between 5 and 20
-MIN_DELAY_SEC = 5
-MAX_DELAY_SEC = 20
+MIN_DELAY_SEC = 1
+MAX_DELAY_SEC = 7
 
 # Default delay = 7 seconds
-current_delay = 7
+current_delay = 3
 
 
 def clamp_delay(value: int) -> int:
@@ -62,3 +62,4 @@ class handler(BaseHTTPRequestHandler):
         self._set_headers(200)
         body = json.dumps({"delay": current_delay}).encode("utf-8")
         self.wfile.write(body)
+
