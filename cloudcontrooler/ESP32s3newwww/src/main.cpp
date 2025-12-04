@@ -47,13 +47,29 @@ void showColor(uint8_t r, uint8_t g, uint8_t b) {
   pixels.setPixelColor(0, pixels.Color(r, g, b));
   pixels.show();
 }
-
 void setLedState(bool on) {
-  ledOn = on;
-  if (on) showColor(LED_ON_R, LED_ON_G, LED_ON_B);
-  else    showColor(0, 0, 0);
-}
+  static unsigned long lastChange = 0;
+  unsigned long now = millis();
 
+  if (lastChange != 0) {
+    float dt = (now - lastChange) / 1000.0;
+    Serial.print("[BLINK] Last state duration: ");
+    Serial.print(dt, 3);
+    Serial.println(" s");
+  }
+  lastChange = now;
+
+  ledOn = on;
+  if (on) {
+    Serial.print("[BLINK] LED ON, interval ");
+    Serial.print(blinkDelayMs / 1000.0, 3);
+    Serial.println(" s");
+    showColor(LED_ON_R, LED_ON_G, LED_ON_B);
+  } else {
+    Serial.println("[BLINK] LED OFF");
+    showColor(0, 0, 0);
+  }
+}
 // ---- WiFi ----
 
 void connectToWiFi() {
@@ -163,5 +179,6 @@ void loop() {
     setLedState(!ledOn);
   }
 }
+
 
 
