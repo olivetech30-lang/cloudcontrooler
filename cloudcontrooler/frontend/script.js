@@ -1,17 +1,15 @@
-// ---------- Configuration (SECONDS) ----------
+// ---------- Configuration (milliseconds) ----------
 
-const MIN_DELAY_SEC = 1;      // matches MIN_DELAY_SEC in main.cpp
-const MAX_DELAY_SEC = 7;     // matches MAX_DELAY_SEC in main.cpp
-const BUTTON_STEP_SEC = 1;    // +/- 1 second per click
+const MIN_DELAY_MS = 500;    // 0.5 s
+const MAX_DELAY_MS = 5000;   // 5.0 s
+const BUTTON_STEP_MS = 500;  // +/- 0.5 s per click
 
-// Backend URL (update if Vercel domain changes)
 const BACKEND_URL = "https://cloudcontrollerbackend.vercel.app";
 const DELAY_API_URL = `${BACKEND_URL}/api/delay`;
 
 // ---------- State ----------
 
-let currentDelaySec = 3;      // default 7s -> matches blinkDelaySec
-let pollTimer = null;
+let currentDelayMs = 700;    // default 0.7 s
 
 // ---------- DOM elements ----------
 
@@ -23,8 +21,8 @@ const connectionStatusEl = document.getElementById("connectionStatus");
 
 // ---------- Helpers ----------
 
-function clampDelaySec(v) {
-  return Math.min(MAX_DELAY_SEC, Math.max(MIN_DELAY_SEC, v));
+function clampDelayMs(v) {
+  return Math.min(MAX_DELAY_MS, Math.max(MIN_DELAY_MS, v));
 }
 
 function setStatus(online) {
@@ -39,26 +37,24 @@ function setStatus(online) {
   }
 }
 
-function updateUI(delaySec) {
-  delayValueEl.textContent = delaySec;     // show seconds
-  if (parseInt(delaySliderEl.value, 10) !== delaySec) {
-    delaySliderEl.value = delaySec;
+function updateUI(delayMs) {
+  delayValueEl.textContent = delayMs;
+  if (parseInt(delaySliderEl.value, 10) !== delayMs) {
+    delaySliderEl.value = delayMs;
   }
 }
 
-// ---------- Backend communication ----------
+// ---------- Backend calls ----------
 
-// Read current delay (in SECONDS) from backend
+// GET /api/delay once (on page load)
 async function fetchCurrentDelay() {
   try {
     const res = await fetch(DELAY_API_URL);
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-
     if (typeof data.delay === "number") {
-      const sec = clampDelaySec(data.delay);  // data.delay is seconds
-      currentDelaySec = sec;
-      updateUI(sec);
+      currentDelayMs = clampDelayMs(data.delay);
+      updateUI(currentDelayMs);
       setStatus(true);
     }
   } catch (err) {
@@ -67,71 +63,61 @@ async function fetchCurrentDelay() {
   }
 }
 
-// Send new delay in SECONDS
-async function sendDelaySec(newDelaySec) {
-  const clampedSec = clampDelaySec(newDelaySec);
-  currentDelaySec = clampedSec;
-  updateUI(clampedSec);
+// POST /api/delay whenever user changes the delay
+async function sendDelayMs(newDelayMs) {
+  const clampedMs = clampDelayMs(newDelayMs);
+  currentDelayMs = clampedMs;
+  updateUI(clampedMs);
 
   try {
     const res = await fetch(DELAY_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ delay: clampedSec }),  // seconds
+      body: JSON.stringify({ delay: clampedMs })  // ms
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-
     if (typeof data.delay === "number") {
-      const sec = clampDelaySec(data.delay);
-      currentDelaySec = sec;
-      updateUI(sec);
+      currentDelayMs = clampDelayMs(data.delay);
+      updateUI(currentDelayMs);
     }
     setStatus(true);
   } catch (err) {
-    console.error("[frontend] sendDelaySec error:", err);
+    console.error("[frontend] sendDelayMs error:", err);
     setStatus(false);
   }
 }
 
 // ---------- Event handlers ----------
 
-// – button: decrease delay -> faster blinking
+// – button: smaller delay => faster blink
 btnMinusEl.addEventListener("click", () => {
-  sendDelaySec(currentDelaySec - BUTTON_STEP_SEC);
+  sendDelayMs(currentDelayMs - BUTTON_STEP_MS);
 });
 
-// + button: increase delay -> slower blinking
+// + button: larger delay => slower blink
 btnPlusEl.addEventListener("click", () => {
-  sendDelaySec(currentDelaySec + BUTTON_STEP_SEC);
+  sendDelayMs(currentDelayMs + BUTTON_STEP_MS);
 });
 
-// Slider: set exact delay in seconds
+// Slider: exact delay in ms
 delaySliderEl.addEventListener("input", (e) => {
-  const valueSec = parseInt(e.target.value, 10);
-  sendDelaySec(valueSec);
+  const valueMs = parseInt(e.target.value, 10);
+  sendDelayMs(valueMs);
 });
 
-// ---------- Polling (keep in sync across multiple clients) ----------
-
-function startPolling() {
-  if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(fetchCurrentDelay, 2000); // every 2s
-}
-
-// ---------- Init ----------
+// ---------- Init (no polling) ----------
 
 window.addEventListener("load", () => {
-  // Ensure slider matches config
-  delaySliderEl.min = MIN_DELAY_SEC;
-  delaySliderEl.max = MAX_DELAY_SEC;
-  delaySliderEl.step = 1;
-  delaySliderEl.value = currentDelaySec;
+  // Make sure slider matches our ms range
+  delaySliderEl.min = MIN_DELAY_MS;
+  delaySliderEl.max = MAX_DELAY_MS;
+  delaySliderEl.step = BUTTON_STEP_MS;
+  delaySliderEl.value = currentDelayMs;
 
-  updateUI(currentDelaySec);
+  updateUI(currentDelayMs);
   setStatus(false);
 
+  // Load initial delay from backend once
   fetchCurrentDelay();
-  startPolling();
 });
-
