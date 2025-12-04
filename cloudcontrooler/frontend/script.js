@@ -5,8 +5,8 @@ const BUTTON_STEP_MS = 100;
 const BACKEND_URL = "https://cloudcontrollerbackend.vercel.app";
 const DELAY_API_URL = `${BACKEND_URL}/api/delay`;
 
-let currentDelayMs = 700;
-let pollTimer = null;
+let currentDelayMs = 700;    // default
+// let pollTimer = null;     // REMOVED
 
 const delayValueEl = document.getElementById("delayValue");
 const delaySliderEl = document.getElementById("delaySlider");
@@ -37,6 +37,7 @@ function updateUI(delayMs) {
   }
 }
 
+// ---- GET /api/delay once or on demand ----
 async function fetchCurrentDelay() {
   try {
     const res = await fetch(DELAY_API_URL);
@@ -53,6 +54,7 @@ async function fetchCurrentDelay() {
   }
 }
 
+// ---- POST /api/delay whenever user changes value ----
 async function sendDelayMs(newDelayMs) {
   const clampedMs = clampDelayMs(newDelayMs);
   currentDelayMs = clampedMs;
@@ -93,11 +95,7 @@ delaySliderEl.addEventListener("input", (e) => {
   sendDelayMs(valueMs);
 });
 
-function startPolling() {
-  if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(fetchCurrentDelay, 2000);
-}
-
+// ---- Init (no polling) ----
 window.addEventListener("load", () => {
   delaySliderEl.min = MIN_DELAY_MS;
   delaySliderEl.max = MAX_DELAY_MS;
@@ -107,6 +105,6 @@ window.addEventListener("load", () => {
   updateUI(currentDelayMs);
   setStatus(false);
 
+  // Load initial value from backend ONCE
   fetchCurrentDelay();
-  startPolling();
 });
