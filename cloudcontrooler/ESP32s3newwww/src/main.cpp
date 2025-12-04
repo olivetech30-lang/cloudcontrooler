@@ -7,8 +7,8 @@
 
 // ---------- User configuration ----------
 
-const char* WIFI_SSID     = "ESPTEST";
-const char* WIFI_PASSWORD = "12345678";
+const char* WIFI_SSID     = "ESPTEST1";
+const char* WIFI_PASSWORD = "123456789";
 
 const char* BACKEND_HOST  = "cloudcontrollerbackend.vercel.app";
 const char* DELAY_PATH    = "/api/delay";
@@ -163,3 +163,4 @@ void loop() {
     setLedState(!ledOn);
   }
 }
+
