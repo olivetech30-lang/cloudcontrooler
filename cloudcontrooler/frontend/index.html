@@ -1,57 +1,53 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Cloud Flash Controller</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app">
+  <div>
     <header>
       <h1>Cloud Flash Controller</h1>
-      <div id="connectionStatus" class="status status-disconnected">
+      <div id="connectionStatus">
         Checking...
       </div>
     </header>
 
     <main>
-      <section class="display">
-        <div class="label">Current delay</div>
-        <div class="value">
+      <section>
+        <div>Current delay</div>
+        <div>
           <span id="delayValue">--</span>
-          <span class="unit">s</span> <!-- seconds -->
+          <span>ms</span>
         </div>
       </section>
 
-      <section class="controls">
-        <button id="btnMinus" class="btn">−</button>
+      <section>
+        <button id="btnMinus">−</button>
 
-        <div class="slider-wrapper">
-         <input
-  id="delaySlider"
-  type="range"
-  min="500"
-  max="5000"
-  step="500"
-  value="700"
-/>
-        <span class="unit">ms</span>
-<div class="slider-labels">
-  <span>Faster (500&nbsp;ms)</span>
-  <span>Slower (5000&nbsp;ms)</span>
-</div>
+        <div>
+          <input
+            id="delaySlider"
+            type="range"
+            min="500"
+            max="5000"
+            step="500"
+            value="700"
+          />
+          <div>
+            <span>Faster (500 ms)</span>
+            <span>Slower (5000 ms)</span>
+          </div>
         </div>
 
-        <button id="btnPlus" class="btn">+</button>
+        <button id="btnPlus">+</button>
       </section>
 
-      <section class="hint">
+      <section>
         <p>
           Use <strong>−</strong> to blink faster, <strong>+</strong> to blink slower,
-          or drag the slider to set an exact delay (5–20&nbsp;s).
+          or drag the slider to set an exact delay (500–5000 ms).
         </p>
         <p>
           This page talks to a cloud API; the ESP32 polls the same API via HTTPS.
@@ -63,6 +59,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
-
-
