@@ -13,10 +13,10 @@ let currentDelayMs = 700;    // default 0.7 s
 
 // ---------- DOM elements ----------
 
-const delayValueEl = document.getElementById("delayValue");
-const delaySliderEl = document.getElementById("delaySlider");
-const btnMinusEl = document.getElementById("btnMinus");
-const btnPlusEl = document.getElementById("btnPlus");
+const delayValueEl      = document.getElementById("delayValue");
+const delaySliderEl     = document.getElementById("delaySlider");
+const btnMinusEl        = document.getElementById("btnMinus");
+const btnPlusEl         = document.getElementById("btnPlus");
 const connectionStatusEl = document.getElementById("connectionStatus");
 
 // ---------- Helpers ----------
@@ -46,7 +46,7 @@ function updateUI(delayMs) {
 
 // ---------- Backend calls ----------
 
-// GET /api/delay once (on page load)
+// GET /api/delay once on page load
 async function fetchCurrentDelay() {
   try {
     const res = await fetch(DELAY_API_URL);
@@ -63,7 +63,7 @@ async function fetchCurrentDelay() {
   }
 }
 
-// POST /api/delay whenever user changes the delay
+// POST /api/delay whenever user changes delay
 async function sendDelayMs(newDelayMs) {
   const clampedMs = clampDelayMs(newDelayMs);
   currentDelayMs = clampedMs;
@@ -73,7 +73,7 @@ async function sendDelayMs(newDelayMs) {
     const res = await fetch(DELAY_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ delay: clampedMs })  // ms
+      body: JSON.stringify({ delay: clampedMs })
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
@@ -88,7 +88,7 @@ async function sendDelayMs(newDelayMs) {
   }
 }
 
-// ---------- Event handlers ----------
+// ---------- UI events ----------
 
 // – button: smaller delay => faster blink
 btnMinusEl.addEventListener("click", () => {
@@ -106,10 +106,9 @@ delaySliderEl.addEventListener("input", (e) => {
   sendDelayMs(valueMs);
 });
 
-// ---------- Init (no polling) ----------
+// ---------- Init (no browser polling) ----------
 
 window.addEventListener("load", () => {
-  // Make sure slider matches our ms range
   delaySliderEl.min = MIN_DELAY_MS;
   delaySliderEl.max = MAX_DELAY_MS;
   delaySliderEl.step = BUTTON_STEP_MS;
@@ -118,6 +117,6 @@ window.addEventListener("load", () => {
   updateUI(currentDelayMs);
   setStatus(false);
 
-  // Load initial delay from backend once
+  // Fetch initial delay from backend ONCE
   fetchCurrentDelay();
 });
