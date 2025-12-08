@@ -28,7 +28,6 @@ class handler(BaseHTTPRequestHandler):
     def _set_headers(self, status_code=200):
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
-        # CORS so frontend can call from anywhere
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
