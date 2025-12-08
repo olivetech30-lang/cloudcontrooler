@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Cloud Flash Controller</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Your own stylesheet -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -21,7 +21,7 @@
         <div class="label">Current delay</div>
         <div class="value">
           <span id="delayValue">--</span>
-          <span class="unit">ms</span> 
+          <span class="unit">ms</span>
         </div>
       </section>
 
@@ -43,7 +43,6 @@
           </div>
         </div>
 
-
         <button id="btnPlus" class="btn">+</button>
       </section>
 
@@ -53,7 +52,7 @@
           or drag the slider to set an exact delay (500–5000 ms).
         </p>
         <p>
-          This page talks to a cloud API; the ESP32 polls the same API via HTTPS.
+          This page talks to a cloud API; the ESP32 polls the same API every second.
         </p>
       </section>
     </main>
@@ -62,6 +61,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
-
-
